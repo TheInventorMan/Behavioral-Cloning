@@ -63,8 +63,13 @@ def driveModel(input_shape=(70, 160, 3), optimizer="adam", loss="mse"):
 
     return model
 
+# Generator for augmenting and yielding images in batches
+def data_gen(examples, batch_size=64):
+    pass
+
+# Main sequence
 def train_sequence():
-    # Import data
+    # Import csv data into db
     db = []
 
     dataFile = open(CSV_FILE_PATH)
