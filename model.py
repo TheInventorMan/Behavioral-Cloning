@@ -14,8 +14,8 @@ CSV_FILE_PATH = ""
 # Helper functions
 # Crop out landscape and car hood
 def augment(img):
-    cropped_img = img[50:120, :, :]
-    resized_img = cv2.resize(cropped_img, (160,70))
+    cropped_img = img[60:130, :, :]
+    resized_img = cv2.resize(cropped_img, (200,100))
     return resized_img
 
 
