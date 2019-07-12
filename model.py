@@ -42,31 +42,34 @@ def training_generator():
             X_train_batch = []
             Y_train_batch = []
             for datapoint in batch:
+                steering_ang = float(datapoint[3][1:])
                 try:
                     #print(datapoint)
                     center_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[0]), cv2.COLOR_BGR2RGB)
-                    left_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[1][1:]), cv2.COLOR_BGR2RGB)
-                    right_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[2][1:]), cv2.COLOR_BGR2RGB)
-                    steering_ang = float(datapoint[3][1:])
-
                     center_aug = process_img(center_img)
-                    left_aug = process_img(left_img)
-                    right_aug = process_img(right_img)
-
                     center_aug_f = cv2.flip(center_aug, 1)
-                    left_aug_f = cv2.flip(left_aug, 1)
-                    right_aug_f = cv2.flip(right_aug, 1)
-
                     X_train_batch.append(center_aug)
                     Y_train_batch.append(steering_ang)
                     X_train_batch.append(center_aug_f)
                     Y_train_batch.append(-steering_ang)
+                except:
+                    pass
 
+                try:
+                    left_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[1][1:]), cv2.COLOR_BGR2RGB)
+                    left_aug = process_img(left_img)
+                    left_aug_f = cv2.flip(left_aug, 1)
                     X_train_batch.append(left_aug)
                     Y_train_batch.append(steering_ang + LR_CORRECTION_FACTOR)
                     X_train_batch.append(left_aug_f)
                     Y_train_batch.append(-steering_ang - LR_CORRECTION_FACTOR)
+                except:
+                    pass
 
+                try:
+                    right_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[2][1:]), cv2.COLOR_BGR2RGB)
+                    right_aug = process_img(right_img)
+                    right_aug_f = cv2.flip(right_aug, 1)
                     X_train_batch.append(right_aug)
                     Y_train_batch.append(steering_ang - LR_CORRECTION_FACTOR)
                     X_train_batch.append(right_aug_f)
@@ -84,30 +87,34 @@ def valid_generator():
             X_valid_batch = []
             Y_valid_batch = []
             for datapoint in batch:
+                steering_ang = float(datapoint[3][1:])
                 try:
+                    #print(datapoint)
                     center_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[0]), cv2.COLOR_BGR2RGB)
-                    left_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[1][1:]), cv2.COLOR_BGR2RGB)
-                    right_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[2][1:]), cv2.COLOR_BGR2RGB)
-                    steering_ang = float(datapoint[3][1:])
-
                     center_aug = process_img(center_img)
-                    left_aug = process_img(left_img)
-                    right_aug = process_img(right_img)
-
                     center_aug_f = cv2.flip(center_aug, 1)
-                    left_aug_f = cv2.flip(left_aug, 1)
-                    right_aug_f = cv2.flip(right_aug, 1)
-
                     X_valid_batch.append(center_aug)
                     Y_valid_batch.append(steering_ang)
                     X_valid_batch.append(center_aug_f)
                     Y_valid_batch.append(-steering_ang)
+                except:
+                    pass
 
+                try:
+                    left_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[1][1:]), cv2.COLOR_BGR2RGB)
+                    left_aug = process_img(left_img)
+                    left_aug_f = cv2.flip(left_aug, 1)
                     X_valid_batch.append(left_aug)
                     Y_valid_batch.append(steering_ang + LR_CORRECTION_FACTOR)
                     X_valid_batch.append(left_aug_f)
                     Y_valid_batch.append(-steering_ang - LR_CORRECTION_FACTOR)
+                except:
+                    pass
 
+                try:
+                    right_img = cv2.cvtColor(cv2.imread(REL_TO_IMG + datapoint[2][1:]), cv2.COLOR_BGR2RGB)
+                    right_aug = process_img(right_img)
+                    right_aug_f = cv2.flip(right_aug, 1)
                     X_valid_batch.append(right_aug)
                     Y_valid_batch.append(steering_ang - LR_CORRECTION_FACTOR)
                     X_valid_batch.append(right_aug_f)
@@ -121,11 +128,11 @@ train_db = importData()
 XY_train, XY_valid = train_test_split(train_db, test_size=0.05)
 initialized_model = driveModel()
 history_object = initialized_model.fit_generator(generator=training_generator(),
-                                                 steps_per_epoch=2*len(XY_train),
+                                                 steps_per_epoch=np.ceil(len(XY_train)/BATCH_SIZE),
                                                  epochs=1,
                                                  verbose = 1,
                                                  validation_data=valid_generator(),
-                                                 validation_steps=len(XY_valid))
+                                                 validation_steps=np.ceil(len(XY_valid)/BATCH_SIZE))
 driveModel.save('model.h5')
 ### print the keys contained in the history object
 print(history_object.history.keys())
