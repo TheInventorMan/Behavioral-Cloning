@@ -11,7 +11,7 @@ from driveModel import driveModel
 LR_CORRECTION_FACTOR = 0.2
 CSV_FILE_PATH = "data/driving_log.csv"
 REL_TO_IMG = "data/"
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 
 def importData():
     # Import csv data into db
@@ -121,19 +121,19 @@ def valid_generator():
                     Y_valid_batch.append(-steering_ang + LR_CORRECTION_FACTOR)
                 except:
                     pass
-        yield (X_valid_batch, Y_valid_batch)
+        yield (np.array(X_valid_batch), np.array(Y_valid_batch))
 
 # Main sequence
 train_db = importData()
 XY_train, XY_valid = train_test_split(train_db, test_size=0.05)
 initialized_model = driveModel()
 history_object = initialized_model.fit_generator(generator=training_generator(),
-                                                 steps_per_epoch=np.ceil(len(XY_train)/BATCH_SIZE),
+                                                 steps_per_epoch=np.ceil(2*len(XY_train)/BATCH_SIZE),
                                                  epochs=1,
                                                  verbose = 1,
                                                  validation_data=valid_generator(),
                                                  validation_steps=np.ceil(len(XY_valid)/BATCH_SIZE))
-driveModel.save('model.h5')
+initialized_model.save('model.h5')
 ### print the keys contained in the history object
 print(history_object.history.keys())
 
