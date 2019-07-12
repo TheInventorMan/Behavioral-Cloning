@@ -7,11 +7,12 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 from driveModel import driveModel
+from keras.models import load_model
 # Constants
 LR_CORRECTION_FACTOR = 0.2
 CSV_FILE_PATH = "data/driving_log.csv"
 REL_TO_IMG = "data/"
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 
 def importData():
     # Import csv data into db
@@ -125,15 +126,22 @@ def valid_generator():
 
 # Main sequence
 train_db = importData()
-XY_train, XY_valid = train_test_split(train_db, test_size=0.05)
-initialized_model = driveModel()
-history_object = initialized_model.fit_generator(generator=training_generator(),
+XY_train, XY_valid = train_test_split(train_db, test_size=0.1)
+for i in range(10):
+    print("epoch", i)
+    if (i==0):
+        initialized_model = driveModel()
+        initialized_model.save(str(i+1)+'model.h5')
+        continue
+
+    initialized_model = load_model(str(i) + 'model.h5')
+    history_object = initialized_model.fit_generator(generator=training_generator(),
                                                  steps_per_epoch=np.ceil(2*len(XY_train)/BATCH_SIZE),
                                                  epochs=1,
                                                  verbose = 1,
                                                  validation_data=valid_generator(),
                                                  validation_steps=np.ceil(len(XY_valid)/BATCH_SIZE))
-initialized_model.save('model.h5')
+    initialized_model.save(str(i+1) + 'model.h5')
 ### print the keys contained in the history object
 print(history_object.history.keys())
 
