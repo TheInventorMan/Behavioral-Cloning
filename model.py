@@ -1,18 +1,21 @@
-import csv
 import cv2
 import numpy as np
 
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
-from driveModel import driveModel
 from preprocess import *
+from driveModel import driveModel
 from keras.models import load_model
+
 # Constants
 PROC_FILE_NAME = "data_processed/processed.txt"
 BATCH_SIZE = 256
 preprocess = False # Flip this switch on to prepare dataset and save static copies to disk.
 
+###### HELPER FUNCTIONS #######
+
+# Import data from new dataset reference file.
 def importData():
     parsed_db = []
     db_file = open(PROC_FILE_NAME, 'r')
@@ -23,6 +26,7 @@ def importData():
 
     return parsed_db
 
+# Generator for training data.
 def training_generator():
     global XY_train
     while True:
@@ -42,6 +46,7 @@ def training_generator():
 
         yield (np.array(X_train_batch), np.array(Y_train_batch))
 
+# Generator for validation data.
 def valid_generator():
     global XY_valid
     while True:
@@ -61,13 +66,15 @@ def valid_generator():
                     pass
         yield (np.array(X_valid_batch), np.array(Y_valid_batch))
 
+###### MAIN SEQUENCE ######
 # Can optionally redo preprocessing with a single bool switch:
 if preprocess:
     preprocessImgs()
 
 # Import prepared dataset
 train_db = importData()
-# Make training and validation sets
+
+# Split training and validation sets
 XY_train, XY_valid = train_test_split(train_db, test_size=0.1)
 
 # Trains model one epoch at a time, saving entire model to disk at each iteration.
@@ -86,3 +93,6 @@ for i in range(10):
                                                  validation_data=valid_generator(),
                                                  validation_steps=np.ceil(len(XY_valid)/BATCH_SIZE))
     initialized_model.save(str(i+1) + 'model.h5')
+
+
+###### END OF MAIN SCRIPT #######

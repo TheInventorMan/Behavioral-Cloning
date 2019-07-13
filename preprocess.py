@@ -1,5 +1,6 @@
 import csv
 import cv2
+
 # Constants
 LR_CORRECTION_FACTOR = 0.2
 CSV_FILE_PATH = "data/driving_log.csv"
@@ -26,9 +27,10 @@ def preprocessImgs():
     for line in readingAgent:
         entry = line[:-3] # get rid of non-steering data
         db.append(entry)
-        #print(entry)
+
     dataFile.close()
-    # Make new file for prepared dataset
+
+    # Make new file for prepared dataset reference.
     processed_file = open(PROC_FILE_NAME, "w")
     c_ctr = 0
     l_ctr = 0
@@ -36,6 +38,7 @@ def preprocessImgs():
     ctr = 0
     for datapoint in db:
         steering_ang = float(datapoint[3][1:])
+        # Center images
         try:
             c_fname = datapoint[0].strip()
             c = cv2.imread(REL_TO_IMG + c_fname)
@@ -51,7 +54,7 @@ def preprocessImgs():
             processed_file.write(entry)
         except:
             c_ctr += 1
-
+        # Left images
         try:
             l_fname = datapoint[1].strip()
             l = cv2.imread(REL_TO_IMG + l_fname)
@@ -67,7 +70,7 @@ def preprocessImgs():
             processed_file.write(entry)
         except:
             l_ctr += 1
-
+        # Right images
         try:
             r_fname = datapoint[2].strip()
             r = cv2.imread(REL_TO_IMG + r_fname)
@@ -86,7 +89,7 @@ def preprocessImgs():
 
         print(ctr)
         ctr += 1
-        
+
     processed_file.close()
 
     # Turns out not all of the files in the .csv exist: 22% to be specific

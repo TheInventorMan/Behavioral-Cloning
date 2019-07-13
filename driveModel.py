@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Flatten, Conv2D, Dropout, Lambda, Dense, Activation, BatchNormalization
+from keras.layers import Flatten, Conv2D, Dropout, Dense, Activation, BatchNormalization
 
 def driveModel(input_shape=(100, 200, 3), optimizer="adam", loss="mse"):
     # Define our model :D
