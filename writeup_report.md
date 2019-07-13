@@ -110,7 +110,7 @@ Here's a [link to a screen capture of the simulator during the run](./video_chas
 
 The final model architecture (driveModel.py) is based on the end-to-end deep learning architecture from Nvidia.
 
-Here is a visualization of the original architecture:
+Here is a diagram of the original architecture:
 
 ![alt text][image4]  
 
