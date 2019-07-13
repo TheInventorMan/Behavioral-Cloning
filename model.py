@@ -9,7 +9,7 @@ from driveModel import driveModel
 from keras.models import load_model
 
 # Constants
-PROC_FILE_NAME = "data_processed/processed.txt"
+PROCESSED_FILE_NAME = "data_processed/processed.txt"
 BATCH_SIZE = 256
 preprocess = False # Flip this switch on to prepare dataset and save static copies to disk.
 
@@ -18,7 +18,7 @@ preprocess = False # Flip this switch on to prepare dataset and save static copi
 # Import data from new dataset reference file.
 def importData():
     parsed_db = []
-    db_file = open(PROC_FILE_NAME, 'r')
+    db_file = open(PROCESSED_FILE_NAME, 'r')
 
     for line in db_file:
         parsed_db.append(line.split())
@@ -93,6 +93,5 @@ for i in range(10):
                                                  validation_data=valid_generator(),
                                                  validation_steps=np.ceil(len(XY_valid)/BATCH_SIZE))
     initialized_model.save(str(i+1) + 'model.h5')
-
 
 ###### END OF MAIN SCRIPT #######

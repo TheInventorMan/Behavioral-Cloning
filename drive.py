@@ -60,6 +60,7 @@ def telemetry(sid, data):
         # The current image from the center camera of the car
         imgString = data["image"]
         raw_image = Image.open(BytesIO(base64.b64decode(imgString)))
+        # Crop and resize image to send to model.
         cropped_image = raw_image.crop((0, 60, 320, 130))
         image = cropped_image.resize((200,100))
         image_array = np.asarray(image)
