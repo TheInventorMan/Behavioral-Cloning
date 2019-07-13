@@ -15,11 +15,7 @@ The goals / steps of this project are the following:
 [image1]: ./writeup_resources/test.jpg "Raw front view"
 [image2]: ./writeup_resources/cropped_scaled.jpg "Cropped and scaled"
 [image3]: ./writeup_resources/flipped.jpg "Flipped"
-
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[image4]: ./writeup_resources/nvidia.png "Architecture"
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -70,7 +66,7 @@ The model used an Adam optimizer, so the learning rate was not tuned manually (d
 
 #### 4. Appropriate training data
 
-When beginning the project, I attempted to manually drive the car around the track, but the lag in using an online virtual machine made it all but impossible. I finally resorted to using the sample data provided in the project repository.  
+When beginning the project, I attempted to manually drive the car around the track, but the lag from using an online virtual machine made it all but impossible. I finally resorted to using the sample data provided in the project repository.  
 
 The sample data contained left and right images, in addition to the center view, allowing for training a lane-centering model.  
 
@@ -78,54 +74,47 @@ For details about how I processed and augmented the training data, see the next 
 
 ### Model Architecture and Training Strategy
 
-#### 1. Solution Design Approach
+#### 1. Design Strategy and Training Process
 
-The overall strategy for deriving a model architecture was to ...
+The overall strategy for deriving a model architecture was to first crop the image such that the background landscape and hood of the car are not visible, since that information is not useful to computing steering angle. The cropped image was then resized to 200x100, to reduce the number of pixels that would be passed through the network. This resizing process also changed the aspect ratio, stretching the image along the vertical axis. It can be somewhat compared to the perspective transformed applied to forward-facing images to determine lane curvature.
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+Here's a sample image, before and after the preprocessing:
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting.
+![alt text][image1]
+![alt text][image2]
 
-To combat the overfitting, I modified the model so that ...
+Additionally, I augmented the dataset by flipping the images and reversing the steering angle that correspond to those images. Here is a preprocessed image, before and after flipping:
 
-Then I ...
+![alt text][image2]
+![alt text][image3]
 
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+By the end of the data augmentation process, I had twice as many input pictures: originals + flipped. To ensure the car stays in the middle of the road, the steering angle associated with the left and right images would be adjusted by an offset, so that the car "seeing" those images from the center would add additional correction to the steering angle.
 
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
+For training the network, the preprocessed image would first be normalized using the Keras BatchNormalization function to cause the mean and variance of the pixel values to be close to zero. Next, the image would be passed through several convolutional layers to extract key features of the road. This set of feature maps would then be flattened and sent through a dropout layer before the fully-connected layers. Dropout was added to prevent the model from overfitting to the training set. The fully-connected layers ended with a single output node, which issued the steering angle commands.
+
+I had the initial idea of using Leaky ReLU activations for the entire network. My reasoning behind that was that this could potentially speed up training, since there is a gradient towards the non-linearity in the negative input regime. However, it seems that the online workspace instance does not support Leaky ReLU, so I reverted to standard ReLU activations and let the model train for longer.
+
+Adding dropout when constructing the initial model resulted in low training and validation error from the start. I then experimented with various training batch sizes, and found that a batch_size of 256 was optimal, yielding a validation mean squared error of 0.012 after epoch 5. I used an Adam optimizer, so learning rate did not have to be tuned.
+
+The final step was to run the simulator to see how well the car drove around track one. It exhibited some oscillatory behavior, essentially "ping-ponging" from side to side. The steering seemed a bit sluggish, which was not a problem for the gentler curves on the track, but the car ended up taking a swim following a sharp curve. I had initially thought my model was inadequately trained, but I revisited the drive.py code. It turned out that I was passing the entire field of view to the model, complete with the background landscape and hood. The model was seeing much less pronounced road features and failed as a result.
+
+I added the crop and rescale code to the drive.py file and the drive went remarkably well. The car was almost "locked" in the center of the lane for most of the track.
+
+At the end of the process, the vehicle was able to drive autonomously around the track while almost perfectly remaining centered in the lane.
+
+Here's a [link to a first-person-view video of the run](./video.mp4)  
+
+Here's a [link to a screen capture of the simulator during the run](./video_chase.mp4)  
 
 #### 2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+The final model architecture (driveModel.py) is based on the end-to-end deep learning architecture from Nvidia.
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+Here is a visualization of the original architecture:
 
-![alt text][image1]
+![alt text][image4]  
 
-#### 3. Creation of the Training Set & Training Process
-
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
-
-![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
-![alt text][image3]
-![alt text][image4]
-![alt text][image5]
-
-Then I repeated this process on track two in order to get more data points.
-
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
-
-
-I finally randomly shuffled the data set and put Y% of the data into a validation set.
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+The modifications that I made included:
+* Adjusting the inputs to accept a (200,100) image.
+* Adding a dropout layer with a keep_rate of 0.5 before the fully connected layers
+* Adding a dropout layer with a keep_rate of 0.5 after the 100-node fully-connected layer.
